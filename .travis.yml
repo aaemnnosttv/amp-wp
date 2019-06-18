@@ -74,11 +74,17 @@ jobs:
         - nvm install
         - npm install
       script:
+        - set -e # Fail build as soon as one of the following commands fails.
+        - echo "DEBUG"
+        - pwd
+        - ls
         - npm run build:js
+        - pwd
         - wp dist-archive $(pwd) $(pwd)/build/composer.zip
         - composer install --no-interaction --no-dev
         - wp dist-archive $(pwd) $(pwd)/build/amp.zip
         - echo "Deploying to GitHub releases ..."
+      after_script: false
       deploy:
         provider: releases
         api_key:
