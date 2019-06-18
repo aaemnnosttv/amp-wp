@@ -67,7 +67,7 @@ jobs:
         - curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
         - chmod +x wp-cli.phar
         - mv wp-cli.phar wp
-        - wp package install wp-cli/dist-archive-command
+        - wp package install https://github.com/wp-cli/dist-archive-command/archive/master.zip
         - nvm install
         - npm install
       script:
