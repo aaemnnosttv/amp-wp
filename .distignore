@@ -1,4 +1,5 @@
 /.idea
+/assets/src
 /bin
 /build
 /node_modules
