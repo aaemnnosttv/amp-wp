@@ -99,3 +99,4 @@ jobs:
         on:
           repo: swissspidy/amp-wp
           all_branches: true
+          tags: true
