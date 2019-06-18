@@ -68,7 +68,7 @@ jobs:
         - chmod +x wp-cli.phar
         - mv wp-cli.phar wp
         - wp package install wp-cli/dist-archive-command
-        - (cd $(php -d memory_limit=1024M /usr/local/bin/wp package path wp-cli/dist-archive-command) && git pull) # Temporary workaround.
+        - (cd $(wp package path wp-cli/dist-archive-command) && git pull) # Temporary workaround.
         - nvm install
         - npm install
       script:
