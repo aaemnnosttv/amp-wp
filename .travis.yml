@@ -29,7 +29,10 @@ branches:
     - develop
     - /^\d+\.\d+$/
 
-env: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+env:
+  - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+  - PATH="$(pwd):$TRAVIS_BUILD_DIR/vendor/bin:$HOME/.composer/vendor/bin:$PATH"
+  - WP_CLI_BIN_DIR="$(pwd)"
 
 before_install:
   - phpenv config-rm xdebug.ini || echo "xdebug.ini does not exist."
@@ -45,7 +48,6 @@ install:
   - composer install --no-interaction
   - export DEV_LIB_PATH=vendor/xwp/wp-dev-lib/scripts
   - source "$DEV_LIB_PATH/travis.install.sh"
-  - wp package install git@github.com:wp-cli/dist-archive-command.git
 
 script:
   - npm run build:js
@@ -64,6 +66,10 @@ jobs:
       php: "5.4"
       env: DEV_LIB_SKIP=phpcs,eslint,xmllint,phpsyntax,phpunit
       install:
+        - curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        - chmod +x wp-cli.phar
+        - mv wp-cli.phar wp
+        - wp package install git@github.com:wp-cli/dist-archive-command.git
         - nvm install
         - npm install
       script:
