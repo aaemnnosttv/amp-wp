@@ -67,7 +67,8 @@ jobs:
         - curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
         - chmod +x wp-cli.phar
         - mv wp-cli.phar wp
-        - wp package install https://github.com/wp-cli/dist-archive-command/archive/master.zip
+        - wp package install wp-cli/dist-archive-command
+        - (cd $(php -d memory_limit=1024M /usr/local/bin/wp package path wp-cli/dist-archive-command) && git pull) # Temporary workaround.
         - nvm install
         - npm install
       script:
