@@ -75,9 +75,9 @@ jobs:
         - npm install
       script:
         - npm run build:js
-        - wp dist-archive ./ build/composer.zip
+        - wp dist-archive $(pwd) $(pwd)/build/composer.zip
         - composer install --no-interaction --no-dev
-        - wp dist-archive ./ build/amp.zip
+        - wp dist-archive $(pwd) $(pwd)/build/amp.zip
         - echo "Deploying to GitHub releases ..."
       deploy:
         provider: releases
