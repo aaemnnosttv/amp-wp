@@ -75,6 +75,7 @@ jobs:
         - npm run build:js
         - wp dist-archive ./ $(pwd)/build/composer.zip --create-target-dir
         - wp dist-archive ./ ./build/composer.zip --create-target-dir
+        - wp dist-archive ./ build/composer.zip --create-target-dir
         - wp dist-archive ./ ./composer.zip --create-target-dir
         - wp dist-archive $(pwd) ./composer.zip --create-target-dir
         - wp dist-archive $(pwd) $(pwd)/build/composer.zip --create-target-dir
