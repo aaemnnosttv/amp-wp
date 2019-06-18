@@ -74,9 +74,9 @@ jobs:
       script:
         #- set -e # Fail build as soon as one of the following commands fails.
         - npm run build:js
-        - (cd .. && wp dist-archive $TRAVIS_BUILD_DIR $TRAVIS_BUILD_DIR/build/composer.zip --create-target-dir --debug)
+        - (cd .. && wp dist-archive $TRAVIS_BUILD_DIR $TRAVIS_BUILD_DIR/build/composer.zip --create-target-dir)
         - composer install --no-interaction --no-dev
-        - (cd .. && wp dist-archive $TRAVIS_BUILD_DIR $TRAVIS_BUILD_DIR/build/amp.zip --create-target-dir --debug)
+        - (cd .. && wp dist-archive $TRAVIS_BUILD_DIR $TRAVIS_BUILD_DIR/build/amp.zip --create-target-dir)
         - echo "Deploying to GitHub releases ..."
       after_script: false
       deploy:
