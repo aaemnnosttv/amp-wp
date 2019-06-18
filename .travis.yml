@@ -30,9 +30,10 @@ branches:
     - /^\d+\.\d+$/
 
 env:
-  - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-  - PATH="$(pwd):$TRAVIS_BUILD_DIR/vendor/bin:$HOME/.composer/vendor/bin:$PATH"
-  - WP_CLI_BIN_DIR="$(pwd)"
+  global:
+    - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+    - PATH="$(pwd):$TRAVIS_BUILD_DIR/vendor/bin:$HOME/.composer/vendor/bin:$PATH"
+    - WP_CLI_BIN_DIR="$(pwd)"
 
 before_install:
   - phpenv config-rm xdebug.ini || echo "xdebug.ini does not exist."
