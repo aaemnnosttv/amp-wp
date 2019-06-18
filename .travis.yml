@@ -98,3 +98,4 @@ jobs:
         prerelease: true
         on:
           repo: swissspidy/amp-wp
+          all_branches: true
