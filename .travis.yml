@@ -40,9 +40,6 @@ before_install:
   - |
     # Raise PHP memory limit to 2048MB
     echo 'memory_limit = 2048M' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
-  - |
-    # Make sure the build directory exists
-    mkdir -p $(pwd)/build
 
 install:
   - nvm install
@@ -74,15 +71,15 @@ jobs:
         - nvm install
         - npm install
       script:
-        - set -e # Fail build as soon as one of the following commands fails.
-        - echo "DEBUG"
-        - pwd
-        - ls
+        #- set -e # Fail build as soon as one of the following commands fails.
         - npm run build:js
-        - pwd
-        - wp dist-archive $(pwd) $(pwd)/build/composer.zip
+        - wp dist-archive ./ $(pwd)/build/composer.zip --create-target-dir
+        - wp dist-archive ./ ./build/composer.zip --create-target-dir
+        - wp dist-archive ./ ./composer.zip --create-target-dir
+        - wp dist-archive $(pwd) ./composer.zip --create-target-dir
+        - wp dist-archive $(pwd) $(pwd)/build/composer.zip --create-target-dir
         - composer install --no-interaction --no-dev
-        - wp dist-archive $(pwd) $(pwd)/build/amp.zip
+        - wp dist-archive $(pwd) $(pwd)/build/amp.zip --create-target-dir
         - echo "Deploying to GitHub releases ..."
       after_script: false
       deploy:
