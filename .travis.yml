@@ -70,7 +70,7 @@ install:
 
 script:
   - |
-    if [[ ! -z $TEST_PHP ]] || [[ ! -z $TEST_E2E ]] || [[ "$TRAVIS_BUILD_STAGE_NAME" == "Deploy" ]]; then
+    if [[ ! -z $TEST_PHP ]]; then
       npm run build:js
     fi
   - |
@@ -134,6 +134,15 @@ jobs:
       name: JavaScript unit tests
       php: "7.3"
       env: WP_VERSION=latest TEST_JS=1
+
+    - name: E2E tests
+      php: "7.3"
+      env: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=
+      script:
+        - npm run env:start
+        - npm run build:js
+        - npm run env:reset-site
+        - npm run test:e2e
 
     - name: PHP unit tests w/ external-http (7.3, WordPress latest)
       php: "7.3"
