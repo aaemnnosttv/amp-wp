@@ -51,6 +51,5 @@ function _filter_active_plugins( $active_plugins ) {
 tests_add_filter( 'site_option_active_sitewide_plugins', '_filter_active_plugins' );
 tests_add_filter( 'option_active_plugins', '_filter_active_plugins' );
 
-
 // Start up the WP testing environment.
 require $_tests_dir . '/includes/bootstrap.php';
