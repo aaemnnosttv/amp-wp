@@ -145,7 +145,10 @@ if ( count( $_amp_missing_functions ) > 0 ) {
 
 unset( $_amp_required_extensions, $_amp_missing_extensions, $_amp_required_constructs, $_amp_missing_classes, $_amp_missing_functions, $_amp_required_extension, $_amp_construct_type, $_amp_construct, $_amp_constructs );
 
-if ( ! file_exists( __DIR__ . '/vendor/autoload.php' ) || ! file_exists( __DIR__ . '/vendor/sabberworm/php-css-parser' ) || ! file_exists( __DIR__ . '/assets/js/amp-block-editor.js' ) ) {
+if (
+	! file_exists( __DIR__ . '/assets/js/amp-block-editor.js' ) ||
+	( ! class_exists( 'Sabberworm\\CSS\\Parser' ) && ! file_exists( __DIR__ . '/vendor/autoload.php' ) && ! file_exists( __DIR__ . '/vendor/sabberworm/php-css-parser' ) )
+) {
 	$_amp_load_errors->add(
 		'build_required',
 		sprintf(
