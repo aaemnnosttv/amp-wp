@@ -64,7 +64,7 @@ install:
   - nvm install
   - npm install
   - |
-    if [[ "$TRAVIS_BUILD_STAGE_NAME" == "Test" ]]; then
+    if [[ "$TRAVIS_BUILD_STAGE_NAME" != "Deploy" ]]; then
       travis_retry composer install --no-interaction --optimize-autoloader
     fi
 
