@@ -17,6 +17,9 @@ TMPDIR=$(echo $TMPDIR | sed -e "s/\/$//")
 WP_TESTS_DIR=${WP_TESTS_DIR-$TMPDIR/wordpress-tests}
 WP_CORE_DIR=${WP_CORE_DIR-$TMPDIR/wordpress/}
 
+INSTALL_GB=${INSTALL_GB-""}
+INSTALL_PWA=${INSTALL_PWA-""}
+
 download() {
     if [ `which curl` ]; then
         curl -s "$1" > "$2";
@@ -150,6 +153,19 @@ install_db() {
 	mysqladmin create $DB_NAME --user="$DB_USER" --password="$DB_PASS"$EXTRA
 }
 
+install_plugins() {
+	if [[ ! -z $INSTALL_GB ]]; then
+		gutenberg_plugin_svn_url=https://plugins.svn.wordpress.org/gutenberg/trunk/
+		svn export -q "$gutenberg_plugin_svn_url" "$WP_CORE_DIR/src/wp-content/plugins/gutenberg"
+	fi
+
+	if [[ ! -z $INSTALL_PWA ]]; then
+		pwa_plugin_svn_url=https://plugins.svn.wordpress.org/pwa/trunk/
+		svn export -q "$pwa_plugin_svn_url" "$WP_CORE_DIR/src/wp-content/plugins/pwa"
+	fi
+}
+
 install_wp
 install_test_suite
 install_db
+install_plugins

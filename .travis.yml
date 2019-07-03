@@ -70,18 +70,6 @@ install:
 
 script:
   - |
-    if [[ ! -z $INSTALL_GB ]]; then
-      echo -n "Installing Gutenberg..."
-      gutenberg_plugin_svn_url=https://plugins.svn.wordpress.org/gutenberg/trunk/
-      svn export -q "$gutenberg_plugin_svn_url" "$WP_CORE_DIR/src/wp-content/plugins/gutenberg"
-    fi
-  - |
-    if [[ ! -z $INSTALL_PWA ]]; then
-      echo -n "Installing PWA..."
-      pwa_plugin_svn_url=https://plugins.svn.wordpress.org/pwa/trunk/
-      svn export -q "$pwa_plugin_svn_url" "$WP_CORE_DIR/src/wp-content/plugins/pwa"
-    fi
-  - |
     if [[ ! -z $TEST_PHP ]]; then
       npm run build:js
 
