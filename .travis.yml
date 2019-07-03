@@ -70,10 +70,6 @@ install:
 
 script:
   - |
-    if [[ ! -z $TEST_PHP ]]; then
-      npm run build:js
-    fi
-  - |
     if [[ ! -z $INSTALL_GB ]]; then
       echo -n "Installing Gutenberg..."
       gutenberg_plugin_svn_url=https://plugins.svn.wordpress.org/gutenberg/trunk/
