@@ -5,7 +5,7 @@
  * @package AMP
  */
 
-define( 'AMP_IMG_DIMENSION_TEST_INVALID_FILE', dirname( __FILE__ ) . '/assets/not-exists.png' );
+define( 'AMP_IMG_DIMENSION_TEST_INVALID_FILE', dirname( __DIR__ ) . '/assets/not-exists.png' );
 
 // Not ideal to use remote URLs; mocking would be better for performance, but FasterImage doesn't provide means to do this.
 define( 'IMG_350', 'http://amp-wp.org/wp-content/plugin-test-files/350x150.png' );

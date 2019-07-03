@@ -13,6 +13,16 @@
  */
 class Test_AMP_Service_Worker extends WP_UnitTestCase {
 
+	public static function setUpBeforeClass() {
+		parent::setUpBeforeClass();
+		activate_plugin( 'pwa/pwa.php' );
+	}
+
+	public static function tearDownAfterClass() {
+		deactivate_plugins( 'pwa/pwa.php' );
+		parent::tearDownAfterClass();
+	}
+
 	/**
 	 * Set up.
 	 */
