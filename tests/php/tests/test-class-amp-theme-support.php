@@ -1477,12 +1477,24 @@ class Test_AMP_Theme_Support extends WP_UnitTestCase {
 		}
 
 		$this->assertContains( '<button>no-onclick</button>', $sanitized_html );
-		$this->assertCount( 5, AMP_Validation_Manager::$validation_results );
+		/**
+		 * The following validation errors are expected:
+		 *
+		 * - http_404 for amp-default-css
+		 * - http_404 for wp-block-library-css
+		 * - invalid_attribute for amp-runtime
+		 * - invalid_attribute for amp-list
+		 * - invalid_element for inline JS
+		 * - invalid_attribute for amp-mathml
+		 * - invalid_attribute for onclick attribute
+		 */
+		$this->assertCount( 7, AMP_Validation_Manager::$validation_results );
 		$this->assertEquals(
 			array(
 				'onclick' => 1,
 				'handle'  => 3,
 				'script'  => 1,
+				'link'    => 2,
 			),
 			$removed_nodes
 		);
