@@ -1481,20 +1481,19 @@ class Test_AMP_Theme_Support extends WP_UnitTestCase {
 		 * The following validation errors are expected:
 		 *
 		 * - http_404 for amp-default-css
-		 * - http_404 for wp-block-library-css
 		 * - invalid_attribute for amp-runtime
 		 * - invalid_attribute for amp-list
 		 * - invalid_element for inline JS
 		 * - invalid_attribute for amp-mathml
 		 * - invalid_attribute for onclick attribute
 		 */
-		$this->assertCount( 7, AMP_Validation_Manager::$validation_results );
+		$this->assertCount( 6, AMP_Validation_Manager::$validation_results );
 		$this->assertEquals(
 			array(
 				'onclick' => 1,
 				'handle'  => 3,
 				'script'  => 1,
-				'link'    => 2,
+				'link'    => 1,
 			),
 			$removed_nodes
 		);
@@ -1837,7 +1836,7 @@ class Test_AMP_Theme_Support extends WP_UnitTestCase {
 	 * @covers AMP_Theme_Support::prepare_response()
 	 */
 	public function test_prepare_response_redirect() {
-		$this->markTestSkipped( 'TODO: Figure out reason for infinite redirect loop' );
+		$this->markTestSkipped( 'TODO: Figure out infinite loop' );
 
 		add_filter( 'amp_validation_error_sanitized', '__return_false', 100 );
 
