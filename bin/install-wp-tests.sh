@@ -155,13 +155,15 @@ install_db() {
 
 install_plugins() {
 	if [[ ! -z $INSTALL_GB ]]; then
-		gutenberg_plugin_svn_url=https://plugins.svn.wordpress.org/gutenberg/trunk/
-		svn export -q "$gutenberg_plugin_svn_url" "$WP_CORE_DIR/wp-content/plugins/gutenberg"
+		wget -O "$WP_CORE_DIR/wp-content/plugins/gutenberg.zip" https://downloads.wordpress.org/plugin/gutenberg.zip
+		unzip -d "$WP_CORE_DIR/wp-content/plugins/gutenberg/" "$WP_CORE_DIR/wp-content/plugins/gutenberg.zip"
+		rm -rf "$WP_CORE_DIR/wp-content/plugins/gutenberg.zip"
 	fi
 
 	if [[ ! -z $INSTALL_PWA ]]; then
-		pwa_plugin_svn_url=https://plugins.svn.wordpress.org/pwa/trunk/
-		svn export -q "$pwa_plugin_svn_url" "$WP_CORE_DIR/wp-content/plugins/pwa"
+		wget -O "$WP_CORE_DIR/wp-content/plugins/pwa.zip" https://downloads.wordpress.org/plugin/pwa.zip
+		unzip -d "$WP_CORE_DIR/wp-content/plugins/pwa/" "$WP_CORE_DIR/wp-content/plugins/pwa.zip"
+		rm -rf "$WP_CORE_DIR/wp-content/plugins/pwa.zip"
 	fi
 }
 
