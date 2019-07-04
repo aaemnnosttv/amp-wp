@@ -7,7 +7,7 @@
 	convertWarningsToExceptions="true"
 	>
 	<php>
-		<const name="WP_TEST_ACTIVATED_PLUGINS" value="gutenberg/gutenberg.php" />
+		<const name="WP_TEST_ACTIVATED_PLUGINS" value="gutenberg/gutenberg.php,pwa/pwa.php" />
 	</php>
 	<testsuites>
 		<!-- Default test suite to run all tests -->
