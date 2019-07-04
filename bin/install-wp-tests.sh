@@ -124,7 +124,6 @@ install_test_suite() {
 		sed $ioption "s/yourpasswordhere/$DB_PASS/" "$WP_TESTS_DIR"/wp-tests-config.php
 		sed $ioption "s|localhost|${DB_HOST}|" "$WP_TESTS_DIR"/wp-tests-config.php
 	fi
-
 }
 
 install_db() {
@@ -155,15 +154,15 @@ install_db() {
 
 install_plugins() {
 	if [[ ! -z $INSTALL_GB ]]; then
-		wget -O "$WP_CORE_DIR/wp-content/plugins/gutenberg.zip" https://downloads.wordpress.org/plugin/gutenberg.zip
-		unzip -d "$WP_CORE_DIR/wp-content/plugins/gutenberg/" "$WP_CORE_DIR/wp-content/plugins/gutenberg.zip"
-		rm -rf "$WP_CORE_DIR/wp-content/plugins/gutenberg.zip"
+		download https://downloads.wordpress.org/plugin/gutenberg.zip "${TMPDIR}/gutenberg.zip"
+		unzip -qo "${TMPDIR}/gutenberg.zip" -d "${WP_CORE_DIR}/wp-content/plugins/"
+		rm -rf "${TMPDIR}/gutenberg.zip"
 	fi
 
 	if [[ ! -z $INSTALL_PWA ]]; then
-		wget -O "$WP_CORE_DIR/wp-content/plugins/pwa.zip" https://downloads.wordpress.org/plugin/pwa.zip
-		unzip -d "$WP_CORE_DIR/wp-content/plugins/pwa/" "$WP_CORE_DIR/wp-content/plugins/pwa.zip"
-		rm -rf "$WP_CORE_DIR/wp-content/plugins/pwa.zip"
+		download https://downloads.wordpress.org/plugin/pwa.zip "${TMPDIR}/pwa.zip"
+		unzip -qo "${TMPDIR}/pwa.zip" -d "${WP_CORE_DIR}/wp-content/plugins/"
+		rm -rf "${TMPDIR}/pwa.zip"
 	fi
 }
 
