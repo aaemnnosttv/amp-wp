@@ -176,6 +176,12 @@ jobs:
     - stage: deploy
       name: GitHub Release
       php: "5.4"
+      before_script:
+        # Install WP-CLI for packaging the plugin
+        - curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        - chmod +x wp-cli.phar
+        - mv wp-cli.phar wp
+        - wp package install wp-cli/dist-archive-command
       script:
         #- set -e # Fail build as soon as one of the following commands fails.
         - npm run build:js
@@ -183,12 +189,6 @@ jobs:
         - travis_retry composer install --no-interaction --no-dev --optimize-autoloader
         - (cd .. && wp dist-archive $TRAVIS_BUILD_DIR $TRAVIS_BUILD_DIR/build/amp.zip --create-target-dir)
       before_deploy:
-        # Install WP-CLI for packaging the plugin
-        - curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-        - chmod +x wp-cli.phar
-        - mv wp-cli.phar wp
-        - wp package install wp-cli/dist-archive-command
-
         # Set up git user name and tag this commit
         - git config --local user.name "Pascal Birchler"
         - git config --local user.email "pascalb@google.com"
