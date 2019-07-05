@@ -935,7 +935,7 @@ class Test_AMP_Validation_Manager extends \WP_UnitTestCase {
 	 * @covers AMP_Validation_Manager::wrap_hook_callbacks()
 	 */
 	public function test_callback_wrappers() {
-		$this->markTestSkipped( 'TODO: Figure out infinite loop' );
+		$this->markTestSkipped( 'TODO: Figure out why test is failing' );
 
 		global $post;
 		$that = $this;
@@ -1076,7 +1076,7 @@ class Test_AMP_Validation_Manager extends \WP_UnitTestCase {
 	 * @covers AMP_Validation_Manager::decorate_filter_source()
 	 */
 	public function test_decorate_shortcode_and_filter_source() {
-		$this->markTestSkipped( 'TODO: Figure out infinite loop' );
+		$this->markTestSkipped( 'TODO: Figure out why test is failing' );
 
 		AMP_Validation_Manager::add_validation_error_sourcing();
 		add_shortcode(
