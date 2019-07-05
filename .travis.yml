@@ -108,70 +108,70 @@ jobs:
   allow_failures:
     - env: ALLOW_FAILURES=1
   include:
-    - stage: lint
-      name: Lint (PHP, JavaScript, and configuration files)
-      php: "7.3"
-      env: WP_VERSION=latest
-      before_script:
-        - composer global require --dev localheinz/composer-normalize --ignore-platform-reqs
-      script:
-        - composer validate --no-check-all
-        - composer normalize --dry-run
-        - npm run lint
-
-    - stage: test
-      name: JavaScript unit tests
-      php: "7.3"
-      env: WP_VERSION=latest TEST_JS=1
-
-    - name: E2E tests
-      php: "7.3"
-      env: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=
-      script:
-        - npm run env:start
-        - npm run build:js
-        - npm run env:reset-site
-        - npm run test:e2e
-
-    - name: PHP unit tests w/ external-http (7.3, WordPress latest)
-      php: "7.3"
-      env: WP_VERSION=latest TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1 PHPUNIT_EXTRA_GROUPS=external-http
-
-    - name: PHP unit tests  (7.2, WordPress latest)
-      php: "7.2"
-      env: WP_VERSION=latest TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1
-
-    - name: PHP unit tests  (7.1, WordPress latest)
-      php: "7.1"
-      env: WP_VERSION=latest TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1
-
-    - name: PHP unit tests  (7.0, WordPress latest)
-      php: "7.0"
-      env: WP_VERSION=latest TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1
-
-    - name: PHP unit tests  (5.6, WordPress 5.1)
-      php: "5.6"
-      env: WP_VERSION=5.1 TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1
-
-    - name: PHP unit tests  (5.5, WordPress 5.0)
-      php: "5.5"
-      env: WP_VERSION=5.0 TEST_PHP=1 INSTALL_GB=1
-
-    - name: PHP unit tests w/ external-http (5.4, WordPress 4.9)
-      php: "5.4"
-      env: WP_VERSION=4.9 TEST_PHP=1 PHPUNIT_EXTRA_GROUPS=external-http
-
-    - name: PHP unit tests (7.3, WordPress trunk)
-      php: "7.3"
-      env: WP_VERSION=trunk TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1 ALLOW_FAILURES=1
-
-    - name: PHP unit tests (7.4 Alpha, WordPress trunk)
-      php: "7.4snapshot"
-      env: WP_VERSION=trunk TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1 ALLOW_FAILURES=1
-
-    - name: PHP and JavaScript unit tests (7.3, WordPress trunk, with code coverage)
-      php: "7.3"
-      env: WP_VERSION=latest TEST_PHP=1 TEST_JS=1 INSTALL_GB=1 INSTALL_PWA=1 PHPUNIT_EXTRA_GROUPS=external-http CODE_COVERAGE=1
+#    - stage: lint
+#      name: Lint (PHP, JavaScript, and configuration files)
+#      php: "7.3"
+#      env: WP_VERSION=latest
+#      before_script:
+#        - composer global require --dev localheinz/composer-normalize --ignore-platform-reqs
+#      script:
+#        - composer validate --no-check-all
+#        - composer normalize --dry-run
+#        - npm run lint
+#
+#    - stage: test
+#      name: JavaScript unit tests
+#      php: "7.3"
+#      env: WP_VERSION=latest TEST_JS=1
+#
+#    - name: E2E tests
+#      php: "7.3"
+#      env: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=
+#      script:
+#        - npm run env:start
+#        - npm run build:js
+#        - npm run env:reset-site
+#        - npm run test:e2e
+#
+#    - name: PHP unit tests w/ external-http (7.3, WordPress latest)
+#      php: "7.3"
+#      env: WP_VERSION=latest TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1 PHPUNIT_EXTRA_GROUPS=external-http
+#
+#    - name: PHP unit tests  (7.2, WordPress latest)
+#      php: "7.2"
+#      env: WP_VERSION=latest TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1
+#
+#    - name: PHP unit tests  (7.1, WordPress latest)
+#      php: "7.1"
+#      env: WP_VERSION=latest TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1
+#
+#    - name: PHP unit tests  (7.0, WordPress latest)
+#      php: "7.0"
+#      env: WP_VERSION=latest TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1
+#
+#    - name: PHP unit tests  (5.6, WordPress 5.1)
+#      php: "5.6"
+#      env: WP_VERSION=5.1 TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1
+#
+#    - name: PHP unit tests  (5.5, WordPress 5.0)
+#      php: "5.5"
+#      env: WP_VERSION=5.0 TEST_PHP=1 INSTALL_GB=1
+#
+#    - name: PHP unit tests w/ external-http (5.4, WordPress 4.9)
+#      php: "5.4"
+#      env: WP_VERSION=4.9 TEST_PHP=1 PHPUNIT_EXTRA_GROUPS=external-http
+#
+#    - name: PHP unit tests (7.3, WordPress trunk)
+#      php: "7.3"
+#      env: WP_VERSION=trunk TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1 ALLOW_FAILURES=1
+#
+#    - name: PHP unit tests (7.4 Alpha, WordPress trunk)
+#      php: "7.4snapshot"
+#      env: WP_VERSION=trunk TEST_PHP=1 INSTALL_GB=1 INSTALL_PWA=1 ALLOW_FAILURES=1
+#
+#    - name: PHP and JavaScript unit tests (7.3, WordPress trunk, with code coverage)
+#      php: "7.3"
+#      env: WP_VERSION=latest TEST_PHP=1 TEST_JS=1 INSTALL_GB=1 INSTALL_PWA=1 PHPUNIT_EXTRA_GROUPS=external-http CODE_COVERAGE=1
 
     - stage: deploy
       name: GitHub Release
