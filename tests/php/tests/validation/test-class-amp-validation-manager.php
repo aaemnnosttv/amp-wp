@@ -124,8 +124,6 @@ class Test_AMP_Validation_Manager extends \WP_UnitTestCase {
 	 * @covers AMP_Validation_Manager::init()
 	 */
 	public function test_init() {
-		$this->markTestSkipped( 'TODO: Figure out infinite loop' );
-
 		add_theme_support( AMP_Theme_Support::SLUG );
 		AMP_Validation_Manager::init();
 
@@ -317,8 +315,6 @@ class Test_AMP_Validation_Manager extends \WP_UnitTestCase {
 	 * @covers AMP_Validation_Manager::add_validation_error_sourcing()
 	 */
 	public function test_add_validation_error_sourcing() {
-		$this->markTestSkipped( 'TODO: Figure out infinite loop' );
-
 		AMP_Validation_Manager::add_validation_error_sourcing();
 		$this->assertEmpty( AMP_Validation_Manager::$validation_error_status_overrides );
 		$this->assertEquals( PHP_INT_MAX, has_filter( 'the_content', array( self::TESTED_CLASS, 'decorate_filter_source' ) ) );
@@ -343,8 +339,6 @@ class Test_AMP_Validation_Manager extends \WP_UnitTestCase {
 	 * @covers AMP_Validation_Manager::add_validation_error_sourcing()
 	 */
 	public function test_add_validation_error_sourcing_gutenberg() {
-		$this->markTestSkipped( 'TODO: Figure out infinite loop' );
-
 		if ( ! function_exists( 'do_blocks' ) ) {
 			$this->markTestSkipped( 'Gutenberg not active.' );
 		}
