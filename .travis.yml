@@ -222,10 +222,10 @@ jobs:
           - build/amp.zip
           - build/composer.zip
         skip_cleanup: true
-        draft: true
+        draft: false
         name: "Nightly build"
         body: "This is a nightly build."
-        prerelease: false
+        prerelease: true
         on:
           repo: swissspidy/amp-wp
           all_branches: true
