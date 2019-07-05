@@ -91,7 +91,7 @@ script:
     fi
   - |
     if [[ ! -z "$PHPUNIT_EXTRA_GROUPS" ]]; then
-      echo "echo "Running PHP tests with extra groups $PHPUNIT_EXTRA_GROUPS..."
+      echo "Running PHP tests with extra groups $PHPUNIT_EXTRA_GROUPS..."
       if [[ ! -z $CODE_COVERAGE ]]; then
         echo "Running PHP unit tests with coverage..."
         npm run test:php -- --group $PHPUNIT_EXTRA_GROUPS --coverage-clover build/logs/clover.xml
