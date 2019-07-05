@@ -78,6 +78,7 @@ script:
 
       if [[ ! -z $CODE_COVERAGE ]]; then
         npm run test:php -- --coverage-clover build/logs/clover.xml
+        bash <(curl -s https://codecov.io/bash) -cF javascript -f build/logs/clover.xml
       else
         npm run test:php
       fi
@@ -87,6 +88,7 @@ script:
       echo "Running phpunit group $PHPUNIT_EXTRA_GROUPS"
       if [[ ! -z $CODE_COVERAGE ]]; then
         npm run test:php -- --group $PHPUNIT_EXTRA_GROUPS --coverage-clover build/logs/clover.xml
+        bash <(curl -s https://codecov.io/bash) -cF javascript -f build/logs/clover.xml
       else
         npm run test:php -- --group $PHPUNIT_EXTRA_GROUPS
       fi
