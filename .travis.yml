@@ -36,10 +36,11 @@ before_install:
       phpenv config-rm xdebug.ini || echo "xdebug.ini does not exist."
     fi
   - |
-    # Raise PHP memory limit to 2048MB
+    echo "Raise PHP memory limit to 2048MB"
     echo 'memory_limit = 2048M' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
   - |
     if [[ ! -z $TEST_PHP ]]; then
+      echo "Install WordPress PHP test suite"
       bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
 
       # Install the specified version of PHPUnit depending on the PHP version:
@@ -74,31 +75,43 @@ install:
 script:
   - |
     if [[ ! -z $TEST_PHP ]]; then
+      echo "Running PHP tests..."
+      echo "Building JavaScript..."
       npm run build:js
 
       if [[ ! -z $CODE_COVERAGE ]]; then
+        echo "Running PHP unit tests with coverage..."
         npm run test:php -- --coverage-clover build/logs/clover.xml
+        echo "Uploading coverage data..."
         bash <(curl -s https://codecov.io/bash) -cF javascript -f build/logs/clover.xml
       else
+        echo "Running PHP unit tests..."
         npm run test:php
       fi
     fi
   - |
     if [[ ! -z "$PHPUNIT_EXTRA_GROUPS" ]]; then
-      echo "Running phpunit group $PHPUNIT_EXTRA_GROUPS"
+      echo "echo "Running PHP tests with extra groups $PHPUNIT_EXTRA_GROUPS..."
       if [[ ! -z $CODE_COVERAGE ]]; then
+        echo "Running PHP unit tests with coverage..."
         npm run test:php -- --group $PHPUNIT_EXTRA_GROUPS --coverage-clover build/logs/clover.xml
+        echo "Uploading coverage data..."
         bash <(curl -s https://codecov.io/bash) -cF javascript -f build/logs/clover.xml
       else
+        echo "Running PHP unit tests..."
         npm run test:php -- --group $PHPUNIT_EXTRA_GROUPS
       fi
     fi
   - |
     if [[ ! -z $TEST_JS ]]; then
+      echo "Running JavaScript tests..."
       if [[ ! -z $CODE_COVERAGE ]]; then
+        echo "Running JavaScript unit tests with coverage..."
         npm run test:js -- --ci --cacheDirectory="$HOME/.jest-cache" --collectCoverage
+        echo "Uploading coverage data..."
         bash <(curl -s https://codecov.io/bash) -cF javascript -f build/logs/lcov.info
       else
+        echo "Running JavaScript unit tests..."
         npm run test:js -- --ci --cacheDirectory="$HOME/.jest-cache"
       fi
     fi
@@ -128,6 +141,7 @@ jobs:
 #      php: "7.3"
 #      env: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=
 #      script:
+#        - echo "Running E2E tests..."
 #        - npm run env:start
 #        - npm run build:js
 #        - npm run env:reset-site
@@ -177,22 +191,27 @@ jobs:
       name: GitHub Release
       php: "5.4"
       before_script:
-        # Install WP-CLI for packaging the plugin
+        # Needed for packaging the plugin
+        - echo "Installing WP-CLI with dist-archive command..."
         - curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
         - chmod +x wp-cli.phar
         - mv wp-cli.phar wp
         - wp package install wp-cli/dist-archive-command
       script:
-        #- set -e # Fail build as soon as one of the following commands fails.
+        - set -e # Fail build as soon as one of the following commands fails.
+        - echo "Building JavaScript..."
         - npm run build:js
+        - echo "Building package for use with Composer..."
         - (cd .. && wp dist-archive $TRAVIS_BUILD_DIR $TRAVIS_BUILD_DIR/build/composer.zip --create-target-dir)
         - travis_retry composer install --no-interaction --no-dev --optimize-autoloader
+        - echo "Building complete package for standalone use..."
         - (cd .. && wp dist-archive $TRAVIS_BUILD_DIR $TRAVIS_BUILD_DIR/build/amp.zip --create-target-dir)
       before_deploy:
         # Set up git user name and tag this commit
         - git config --local user.name "Pascal Birchler"
         - git config --local user.email "pascalb@google.com"
         - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%dT%H%M%SZ')-$(git log --format=%h -1)}
+        - echo "Tagging release $TRAVIS_TAG..."
         - git tag $TRAVIS_TAG
       deploy:
         provider: releases
