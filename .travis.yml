@@ -31,7 +31,10 @@ env:
     - WP_CLI_BIN_DIR="$(pwd)"
 
 before_install:
-  - phpenv config-rm xdebug.ini || echo "xdebug.ini does not exist."
+  - |
+    if [[ -z $CODE_COVERAGE ]]; then
+      phpenv config-rm xdebug.ini || echo "xdebug.ini does not exist."
+    fi
   - |
     # Raise PHP memory limit to 2048MB
     echo 'memory_limit = 2048M' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
