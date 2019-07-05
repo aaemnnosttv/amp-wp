@@ -225,7 +225,7 @@ jobs:
         draft: true
         name: "Nightly build"
         body: "This is a nightly build."
-        prerelease: true
+        prerelease: false
         on:
           repo: swissspidy/amp-wp
           all_branches: true
