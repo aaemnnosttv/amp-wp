@@ -18,11 +18,11 @@
  *
  * This has to be a global for the same of PHP 5.2.
  *
- * @var \WP_Error $_amp_load_errors
+ * @var WP_Error $_amp_load_errors
  */
 global $_amp_load_errors;
 
-$_amp_load_errors = new \WP_Error();
+$_amp_load_errors = new WP_Error();
 
 if ( version_compare( phpversion(), '5.4', '<' ) ) {
 	$_amp_load_errors->add(
@@ -163,7 +163,7 @@ if (
  * Displays an admin notice about why the plugin is unable to load.
  *
  * @since 1.1.2
- * @global \WP_Error $_amp_load_errors
+ * @global WP_Error $_amp_load_errors
  */
 function _amp_show_load_errors_admin_notice() {
 	global $_amp_load_errors;
