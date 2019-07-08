@@ -197,7 +197,6 @@ jobs:
         - chmod +x wp-cli.phar
         - mv wp-cli.phar wp
         - wp package install wp-cli/dist-archive-command
-        - (cd $(wp package path wp-cli/dist-archive-command) && git pull) # Temporary workaround.
       script:
         - set -e # Fail build as soon as one of the following commands fails.
         - echo "Building JavaScript..."
