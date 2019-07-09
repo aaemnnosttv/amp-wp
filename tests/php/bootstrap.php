@@ -33,7 +33,7 @@ tests_add_filter(
  * @return array
  */
 function _filter_active_plugins( $active_plugins ) {
-	$forced_active_plugins = array();
+	$forced_active_plugins = [];
 
 	if ( defined( 'WP_TEST_ACTIVATED_PLUGINS' ) ) {
 		$forced_active_plugins = preg_split( '/\s*,\s*/', WP_TEST_ACTIVATED_PLUGINS );
