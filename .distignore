@@ -1,3 +1,4 @@
+.git
 .idea
 assets/src
 bin
@@ -27,6 +28,7 @@ composer.lock
 contributing.md
 docker-compose.yml
 Gruntfile.js
+jest-puppeteer.config.js
 package.json
 package-lock.json
 phpcs.xml
