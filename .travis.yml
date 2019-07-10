@@ -27,8 +27,7 @@ branches:
 env:
   global:
     - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-    - PATH="$(pwd):$TRAVIS_BUILD_DIR/vendor/bin:$HOME/.composer/vendor/bin:$PATH"
-    - WP_CLI_BIN_DIR="$(pwd)"
+    - PATH="$(pwd):$TRAVIS_BUILD_DIR/vendor/bin:$HOME/.composer/vendor/bin:$HOME/wp-cli:$PATH"
 
 before_install:
   - |
@@ -195,7 +194,8 @@ jobs:
         - echo "Installing WP-CLI with dist-archive command..."
         - curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
         - chmod +x wp-cli.phar
-        - mv wp-cli.phar wp
+        - mkdir -p $HOME/wp-cli
+        - mv wp-cli.phar $HOME/wp-cli/wp
         - wp package install wp-cli/dist-archive-command
       script:
         - set -e # Fail build as soon as one of the following commands fails.
