@@ -31,8 +31,8 @@ Gruntfile.js
 jest-puppeteer.config.js
 package.json
 package-lock.json
-phpcs.xml
-phpunit.xml
+phpcs.xml.dist
+phpunit.xml.dist
 postcss.config.js
 readme.md
 renovate.json
