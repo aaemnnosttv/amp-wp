@@ -10,6 +10,7 @@ wp-assets
 .browserslistrc
 .dev-lib
 .distignore
+.editorconfig
 .eslintignore
 .eslintrc
 .gitattributes
