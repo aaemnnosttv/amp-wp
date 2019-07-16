@@ -36,20 +36,28 @@ class MetaBlockEdit extends Component {
 		const {
 			height,
 			width,
+			ampFitText,
 		} = attributes;
 
-		// If not selected, only proceed if height or width has changed.
-		if (
-			! isSelected &&
-			prevProps.attributes.height === height &&
-			prevProps.attributes.width === width &&
-			isEqual( prevProps.fontSize, fontSize )
-		) {
-			return;
+		// If not selected, only change font size if height or width has changed.
+		const checkFontSize = (
+			isSelected ||
+			prevProps.attributes.height !== height ||
+			prevProps.attributes.width !== width
+		);
+
+		if ( checkFontSize ) {
+			maybeUpdateFontSize( this.props );
 		}
 
-		maybeUpdateFontSize( this.props );
-		maybeUpdateBlockDimensions( this.props );
+		const checkBlockDimensions = (
+			! isEqual( prevProps.fontSize, fontSize ) ||
+			( prevProps.attributes.ampFitText !== ampFitText && ! ampFitText )
+		);
+
+		if ( checkBlockDimensions ) {
+			maybeUpdateBlockDimensions( this.props );
+		}
 	}
 
 	render() {

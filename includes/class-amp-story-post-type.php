@@ -102,6 +102,13 @@ class AMP_Story_Post_Type {
 	const AMP_STORIES_EDITOR_STYLE_HANDLE = 'amp-stories-editor';
 
 	/**
+	 * AMP Stories Ajax action.
+	 *
+	 * @var string
+	 */
+	const AMP_STORIES_AJAX_ACTION = 'amp-story-export';
+
+	/**
 	 * Check if the required version of block capabilities available.
 	 *
 	 * Note that Gutenberg requires WordPress 5.0, so this check also accounts for that.
@@ -206,6 +213,8 @@ class AMP_Story_Post_Type {
 
 		add_filter( 'wp_kses_allowed_html', [ __CLASS__, 'filter_kses_allowed_html' ], 10, 2 );
 
+		add_filter( 'rest_request_before_callbacks', [ __CLASS__, 'filter_rest_request_for_kses' ], 100, 3 );
+
 		add_action( 'wp_default_styles', [ __CLASS__, 'register_story_card_styling' ] );
 
 		add_action( 'enqueue_block_editor_assets', [ __CLASS__, 'enqueue_block_editor_styles' ] );
@@ -265,6 +274,9 @@ class AMP_Story_Post_Type {
 		// The AJAX handler for when an image is cropped and sent via POST.
 		add_action( 'wp_ajax_custom-header-crop', [ __CLASS__, 'crop_featured_image' ] );
 
+		// The AJAX handler for exporting an AMP story.
+		add_action( 'wp_ajax_' . self::AMP_STORIES_AJAX_ACTION, [ __CLASS__, 'handle_export' ] );
+
 		// Register render callback for just-in-time inclusion of dependent Google Font styles.
 		add_filter( 'render_block', [ __CLASS__, 'render_block_with_google_fonts' ], 10, 2 );
 
@@ -323,6 +335,22 @@ class AMP_Story_Post_Type {
 			}
 		);
 
+		add_filter(
+			'amp_content_sanitizers',
+			static function( $sanitizers ) {
+				if ( self::can_export() ) {
+					$post = get_queried_object();
+					$slug = sanitize_title( $post->post_title, $post->ID );
+
+					$sanitizers['AMP_Story_Export_Sanitizer'] = self::get_export_args( $slug );
+
+					$sanitizers['AMP_Style_Sanitizer']['include_manifest_comment'] = 'never';
+				}
+				return $sanitizers;
+			},
+			100 // Run sanitizer after the others (but before style sanitizer and validating sanitizer).
+		);
+
 		add_action( 'wp_head', [ __CLASS__, 'print_feed_link' ] );
 	}
 
@@ -341,7 +369,286 @@ class AMP_Story_Post_Type {
 	}
 
 	/**
-	 * Filter the allowed tags for Kses to allow for amp-story children.
+	 * Filters an inline style attribute and removes disallowed rules.
+	 *
+	 * This is equivalent to the WordPress core function of the same name,
+	 * except that this does not remove CSS with parentheses in it.
+	 *
+	 * Also, it adds a few more allowed attributes.
+	 *
+	 * @see safecss_filter_attr()
+	 *
+	 * @param string $css A string of CSS rules.
+	 *
+	 * @return string Filtered string of CSS rules.
+	 */
+	private static function safecss_filter_attr( $css ) {
+		$css = wp_kses_no_null( $css );
+		$css = str_replace( [ "\n", "\r", "\t" ], '', $css );
+
+		$allowed_protocols = wp_allowed_protocols();
+
+		$css_array = explode( ';', trim( $css ) );
+
+		/** This filter is documented in wp-includes/kses.php */
+		$allowed_attr = apply_filters(
+			'safe_style_css',
+			[
+				'background',
+				'background-color',
+				'background-image',
+				'background-position',
+
+				'border',
+				'border-width',
+				'border-color',
+				'border-style',
+				'border-right',
+				'border-right-color',
+				'border-right-style',
+				'border-right-width',
+				'border-bottom',
+				'border-bottom-color',
+				'border-bottom-style',
+				'border-bottom-width',
+				'border-left',
+				'border-left-color',
+				'border-left-style',
+				'border-left-width',
+				'border-top',
+				'border-top-color',
+				'border-top-style',
+				'border-top-width',
+
+				'border-spacing',
+				'border-collapse',
+				'caption-side',
+
+				'color',
+				'font',
+				'font-family',
+				'font-size',
+				'font-style',
+				'font-variant',
+				'font-weight',
+				'letter-spacing',
+				'line-height',
+				'text-align',
+				'text-decoration',
+				'text-indent',
+				'text-transform',
+
+				'height',
+				'min-height',
+				'max-height',
+
+				'width',
+				'min-width',
+				'max-width',
+
+				'margin',
+				'margin-right',
+				'margin-bottom',
+				'margin-left',
+				'margin-top',
+
+				'padding',
+				'padding-right',
+				'padding-bottom',
+				'padding-left',
+				'padding-top',
+
+				'flex',
+				'flex-grow',
+				'flex-shrink',
+				'flex-basis',
+
+				'clear',
+				'cursor',
+				'direction',
+				'float',
+				'overflow',
+				'vertical-align',
+				'list-style-type',
+				'grid-template-columns',
+			]
+		);
+
+		// Add some more allowed attributes.
+		$allowed_attr[] = 'display';
+		$allowed_attr[] = 'opacity';
+		$allowed_attr[] = 'object-position';
+		$allowed_attr[] = 'position';
+		$allowed_attr[] = 'top';
+		$allowed_attr[] = 'left';
+		$allowed_attr[] = 'transform';
+
+		/*
+		 * CSS attributes that accept URL data types.
+		 *
+		 * This is in accordance to the CSS spec and unrelated to
+		 * the sub-set of supported attributes above.
+		 *
+		 * See: https://developer.mozilla.org/en-US/docs/Web/CSS/url
+		 */
+		$css_url_data_types = [
+			'background',
+			'background-image',
+
+			'cursor',
+
+			'list-style',
+			'list-style-image',
+		];
+
+		if ( empty( $allowed_attr ) ) {
+			return $css;
+		}
+
+		$css = '';
+		foreach ( $css_array as $css_item ) {
+			if ( '' === $css_item ) {
+				continue;
+			}
+
+			$css_item        = trim( $css_item );
+			$css_test_string = $css_item;
+			$found           = false;
+			$url_attr        = false;
+
+			if ( strpos( $css_item, ':' ) === false ) {
+				$found = true;
+			} else {
+				$parts        = explode( ':', $css_item, 2 );
+				$css_selector = trim( $parts[0] );
+
+				if ( in_array( $css_selector, $allowed_attr, true ) ) {
+					$found    = true;
+					$url_attr = in_array( $css_selector, $css_url_data_types, true );
+				}
+			}
+
+			if ( $found && $url_attr ) {
+				// Simplified: matches the sequence `url(*)`.
+				preg_match_all( '/url\([^)]+\)/', $parts[1], $url_matches );
+
+				foreach ( $url_matches[0] as $url_match ) {
+					// Clean up the URL from each of the matches above.
+					preg_match( '/^url\(\s*([\'\"]?)(.*)(\g1)\s*\)$/', $url_match, $url_pieces );
+
+					if ( empty( $url_pieces[2] ) ) {
+						$found = false;
+						break;
+					}
+
+					$url = trim( $url_pieces[2] );
+
+					if ( empty( $url ) || wp_kses_bad_protocol( $url, $allowed_protocols ) !== $url ) {
+						$found = false;
+						break;
+					} else {
+						// Remove the whole `url(*)` bit that was matched above from the CSS.
+						$css_test_string = str_replace( $url_match, '', $css_test_string );
+					}
+				}
+			}
+
+			if ( $found ) {
+				if ( '' !== $css ) {
+					$css .= ';';
+				}
+
+				$css .= $css_item;
+			}
+		}
+
+		return $css;
+	}
+
+	/**
+	 * Filters the response before executing any REST API callbacks.
+	 *
+	 * Temporarily modifies post content during saving in a way that KSES
+	 * does not strip actually valid CSS from post content, making block content invalid.
+	 *
+	 * @todo Remove once core has better CSS parsing.
+	 *
+	 * @link https://core.trac.wordpress.org/ticket/37134
+	 *
+	 * @param WP_HTTP_Response|WP_Error $response Result to send to the client. Usually a WP_REST_Response or WP_Error.
+	 * @param array                     $handler  Route handler used for the request.
+	 * @param WP_REST_Request           $request  Request used to generate the response.
+	 *
+	 * @return WP_HTTP_Response|WP_Error The filtered response.
+	 */
+	public static function filter_rest_request_for_kses( $response, $handler, $request ) {
+
+		// Short-circuit since this is relevant only for users without unfiltered_html capability.
+		if ( current_user_can( 'unfiltered_html' ) ) {
+			return $response;
+		}
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$obj  = get_post_type_object( self::POST_TYPE_SLUG );
+		$slug = ! empty( $obj->rest_base ) ? $obj->rest_base : $obj->name;
+
+		$editable_request_methods = array_map( 'trim', explode( ',', WP_REST_Server::EDITABLE ) );
+
+		if ( ! in_array( $request->get_method(), $editable_request_methods, true ) || ! preg_match( "#^/wp/v2/{$slug}/#s", $request->get_route() ) ) {
+			return $response;
+		}
+
+		if ( ! current_user_can( 'edit_post', $request['id'] ) ) {
+			return $response;
+		}
+
+		$style_attr_values = [];
+
+		// Replace inline styles with temporary data-temp-style-hash attribute before KSES...
+		add_filter(
+			'content_save_pre',
+			static function ( $post_content ) use ( &$style_attr_values ) {
+				$post_content = preg_replace_callback(
+					'|(?P<before><\w+(?:-\w+)*\s[^>]*?)style=\\\"(?P<styles>[^"]*)\\\"(?P<after>([^>]+?)*>)|', // Extra slashes appear here because $post_content is pre-slashed..
+					static function ( $matches ) use ( &$style_attr_values ) {
+						$hash                       = md5( $matches['styles'] );
+						$style_attr_values[ $hash ] = self::safecss_filter_attr( wp_unslash( $matches['styles'] ) );
+
+						// Replaces the complete style attribute value with its hashed version.
+						return $matches['before'] . sprintf( ' data-temp-style-hash="%s" ', $hash ) . $matches['after'];
+					},
+					$post_content
+				);
+
+				return $post_content;
+			},
+			0
+		);
+
+		// ...And bring it back afterwards.
+		add_filter(
+			'content_save_pre',
+			static function ( $post_content ) use ( &$style_attr_values ) {
+				// Replaces hashed style attribute value with the original value again.
+				return preg_replace_callback(
+					'/ data-temp-style-hash=\\\"(?P<hash>[0-9a-f]+)\\\"/',
+					function ( $matches ) use ( $style_attr_values ) {
+						return isset( $style_attr_values[ $matches['hash'] ] ) ? sprintf( ' style="%s"', esc_attr( wp_slash( $style_attr_values[ $matches['hash'] ] ) ) ) : '';
+					},
+					$post_content
+				);
+			},
+			20
+		);
+
+		return $response;
+	}
+
+	/**
+	 * Filter the allowed tags for KSES to allow for amp-story children.
 	 *
 	 * @param array $allowed_tags Allowed tags.
 	 * @return array Allowed tags.
@@ -351,6 +658,8 @@ class AMP_Story_Post_Type {
 			'amp-story-page',
 			'amp-story-grid-layer',
 			'amp-story-cta-layer',
+			'amp-img',
+			'amp-video',
 		];
 		foreach ( $story_components as $story_component ) {
 			$attributes = array_fill_keys( array_keys( AMP_Allowed_Tags_Generated::get_allowed_attributes() ), true );
@@ -363,11 +672,14 @@ class AMP_Story_Post_Type {
 
 		// @todo This perhaps should not be allowed if user does not have capability.
 		foreach ( $allowed_tags as &$allowed_tag ) {
-			$allowed_tag['animate-in']          = true;
-			$allowed_tag['animate-in-duration'] = true;
-			$allowed_tag['animate-in-delay']    = true;
-			$allowed_tag['animate-in-after']    = true;
-			$allowed_tag['data-font-family']    = true;
+			$allowed_tag['animate-in']           = true;
+			$allowed_tag['animate-in-duration']  = true;
+			$allowed_tag['animate-in-delay']     = true;
+			$allowed_tag['animate-in-after']     = true;
+			$allowed_tag['data-font-family']     = true;
+			$allowed_tag['data-block-name']      = true;
+			$allowed_tag['data-temp-style-hash'] = true;
+			$allowed_tag['layout']               = true;
 		}
 
 		return $allowed_tags;
@@ -681,6 +993,16 @@ class AMP_Story_Post_Type {
 			self::AMP_STORIES_SCRIPT_HANDLE,
 			'ampStoriesFonts',
 			self::get_fonts()
+		);
+
+		wp_localize_script(
+			self::AMP_STORIES_SCRIPT_HANDLE,
+			'ampStoriesExport',
+			[
+				'action'  => self::AMP_STORIES_AJAX_ACTION,
+				'nonce'   => wp_create_nonce( self::AMP_STORIES_AJAX_ACTION ),
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			]
 		);
 	}
 
@@ -1542,7 +1864,7 @@ class AMP_Story_Post_Type {
 	 * @return array $image_sizes The filtered image sizes.
 	 */
 	public static function add_new_max_image_size( $image_sizes ) {
-		$full_size_name = __( 'AMP Story Max Size', 'amp' );
+		$full_size_name = __( 'Story Max Size', 'amp' );
 
 		if ( isset( $_POST['action'] ) && ( 'query-attachments' === $_POST['action'] || 'upload-attachment' === $_POST['action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			$image_sizes[ self::MAX_IMAGE_SIZE_SLUG ] = $full_size_name;
@@ -1552,5 +1874,227 @@ class AMP_Story_Post_Type {
 		}
 
 		return $image_sizes;
+	}
+
+	/**
+	 * Checks for `story_export` and valid Ajax nonce.
+	 *
+	 * @return bool
+	 */
+	public static function can_export() {
+		return is_singular( self::POST_TYPE_SLUG ) && isset( $_GET['story_export'] ) && check_ajax_referer( self::AMP_STORIES_AJAX_ACTION, 'nonce', false );
+	}
+
+	/**
+	 * Get the args used during a story export.
+	 *
+	 * @param string $slug The slug used to build the new `canonical_url`.
+	 *
+	 * @return array
+	 */
+	public static function get_export_args( $slug = '' ) {
+		$base_url = untrailingslashit( AMP_Options_Manager::get_option( 'story_export_base_url' ) );
+
+		return [
+			'base_url'      => esc_url( $base_url ),
+			'canonical_url' => ( $base_url && $slug ) ? esc_url( trailingslashit( $base_url ) . $slug ) : false,
+		];
+	}
+
+	/**
+	 * Returns an asset basename where the date directory structure is retained to avoid filename collisions.
+	 *
+	 * This means that an asset like `https://sample.org/wp-content/uploads/2019/07/sample.jpg`
+	 * returns the basename `2019-07-sample.jpg` instead of `sample.jpg`.
+	 *
+	 * @param string $asset The URL of the export asset.
+	 *
+	 * @return string
+	 */
+	public static function export_image_basename( $asset ) {
+		$asset = preg_replace_callback(
+			'/uploads\/(.*)/',
+			function( $matches ) {
+				return str_replace( '/', '-', $matches[1] );
+			},
+			$asset
+		);
+
+		return basename( $asset );
+	}
+
+	/**
+	 * Ajax handler to export the story ZIP archive.
+	 *
+	 * This method returns an error as JSON and the binary data on success.
+	 */
+	public static function handle_export() {
+		check_ajax_referer( self::AMP_STORIES_AJAX_ACTION, 'nonce' );
+
+		// Get the post ID.
+		$post_id = isset( $_POST['post_ID'] ) ? absint( wp_unslash( $_POST['post_ID'] ) ) : 0;
+
+		// The user must have the correct permissions.
+		if ( ! current_user_can( 'publish_post', $post_id ) ) {
+			wp_send_json_error(
+				[
+					'errorMessage' => esc_html__( 'You do not have the required permissions to export stories.', 'amp' ),
+				],
+				403
+			);
+		}
+
+		// We need the ZipArchive class to make this work.
+		if ( ! class_exists( 'ZipArchive', false ) ) {
+			wp_send_json_error(
+				[
+					/* translators: %s is the ZipArchive class name. */
+					'errorMessage' => sprintf( esc_html__( 'The %s class is required to export stories.', 'amp' ), 'ZipArchive' ),
+				],
+				400
+			);
+		}
+
+		// Bail if the user has not saved the story yet.
+		if ( 'auto-draft' === get_post_status( $post_id ) ) {
+			wp_send_json_error(
+				[
+					'errorMessage' => esc_html__( 'Save the story before exporting.', 'amp' ),
+				],
+				401
+			);
+		}
+
+		// Generate and export the archive.
+		$export = self::generate_export( $post_id );
+
+		// Export failed.
+		if ( is_wp_error( $export ) ) {
+			$error_data = $export->get_error_data();
+
+			if ( is_array( $error_data ) && isset( $error_data['status'] ) ) {
+				$status = $error_data['status'];
+			} else {
+				$status = 500;
+			}
+
+			wp_send_json_error(
+				[
+					'errorMessage' => $export->get_error_message(),
+				],
+				$status
+			);
+		}
+
+		// Failed to export for an unknown reason not related to generating the archive.
+		wp_send_json_error(
+			[
+				'errorMessage' => esc_html__( 'Could not generate the story archive.', 'amp' ),
+			],
+			500
+		);
+	}
+
+	/**
+	 * Generates a Zip archive from the AMP Story.
+	 *
+	 * @param int $post_id The post ID of the AMP Story.
+	 * @return WP_Error
+	 */
+	private static function generate_export( $post_id ) {
+		$post = get_post( $post_id );
+
+		if ( ! $post ) {
+			return new WP_Error( 'amp_story_export_invalid_post', esc_html__( 'The story does not exist.', 'amp' ) );
+		}
+
+		$slug = sanitize_title( $post->post_title, $post->ID );
+		$file = wp_tempnam( $slug );
+
+		$zip = new ZipArchive();
+		$res = $zip->open( $file, ZipArchive::CREATE | ZipArchive::OVERWRITE );
+
+		if ( true !== $res ) {
+			/* translators: %s is the ZipArchive error code. */
+			return new WP_Error( 'amp_story_zip_archive_error', sprintf( esc_html__( 'There was an error generating the ZIP archive. Error code: %s', 'amp' ), $res ) );
+		}
+
+		// Passed to `get_preview_post_link()` for nonce access and to sanitize the output.
+		$query_args = [
+			'story_export' => true,
+			'_wpnonce'     => wp_create_nonce( self::AMP_STORIES_AJAX_ACTION ),
+		];
+
+		// Passed to `wp_remote_get()`.
+		$args = [
+			'cookies'     => wp_unslash( $_COOKIE ), // Pass along cookies so private pages and drafts can be accessed.
+			'timeout'     => 20, // Increase from default of 5 to give extra time for the plugin to process story for exporting.
+			'sslverify'   => false,
+			'redirection' => 0, // Because we're in a loop for redirection.
+			'headers'     => [
+				'Cache-Control' => 'no-cache',
+			],
+		];
+
+		// Get the preview URL.
+		$response = wp_remote_get( get_preview_post_link( $post, $query_args ), $args );
+
+		// Ensure we have the required data.
+		if ( ! ( is_array( $response ) && isset( $response['body'] ) ) ) {
+			return new WP_Error( 'amp_story_export_response', esc_html__( 'Could not retrieve story HTML.', 'amp' ) );
+		}
+
+		// Get the HTML from the response body.
+		$html   = $response['body'];
+		$assets = [];
+		$regex  = '<!--\s*AMP_EXPORT_ASSETS\s*:\s*(\[.*?\])\s*-->';
+
+		// Get the assets from the AMP_EXPORT_ASSETS comment.
+		if ( preg_match( '#</body>.*?' . $regex . '#s', $html, $matches ) ) {
+			$assets = json_decode( $matches[1], true );
+
+			// Remove the comment.
+			$html = preg_replace( '/' . $regex . '/s', '', $html );
+		}
+
+		// Create the zip directory.
+		$zip->addEmptyDir( $slug );
+
+		// Add README.txt file.
+		$zip->addFromString( $slug . '/README.txt', 'temporary content...' );
+
+		// Add index.html file.
+		$zip->addFromString( $slug . '/index.html', $html );
+
+		// Add the assets.
+		if ( ! empty( $assets ) ) {
+
+			// Create the empty assets directory.
+			$zip->addEmptyDir( $slug . '/assets' );
+
+			foreach ( $assets as $asset ) {
+				$response = wp_remote_get( $asset, [ 'sslverify' => false ] );
+				if ( is_array( $response ) && ! empty( $response['body'] ) ) {
+					$zip->addFromString( $slug . '/assets/' . self::export_image_basename( $asset ), $response['body'] );
+				}
+			}
+		}
+
+		// Close the active archive.
+		$zip->close();
+
+		// Read the file.
+		$fo = @fopen( $file, 'r' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fopen, WordPress.PHP.NoSilencedErrors.Discouraged
+
+		if ( ! $fo ) {
+			return new WP_Error( 'amp_story_export_file_open', esc_html__( 'Could not open the generated ZIP archive.', 'amp' ) );
+		}
+
+		header( 'Content-type: application/octet-stream' );
+		header( 'Content-Disposition: attachment; filename="' . sprintf( '%s.zip', $slug ) . '"' );
+		header( 'Content-length: ' . filesize( $file ) );
+		fpassthru( $fo );
+		unlink( $file );
+		die();
 	}
 }
